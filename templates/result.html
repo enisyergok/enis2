@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Üretim Planı Sonuçları</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container mt-4 mb-5">
+        <h1 class="text-center mb-4">Üretim Planı Sonuçları</h1>
+        
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5>Genel Bilgiler</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th>Toplam Üretim Süresi:</th>
+                                <td>{{ plan.total_minutes|round|int }} dakika ({{ (plan.total_minutes/60)|round(1) }} saat)</td>
+                            </tr>
+                            <tr>
+                                <th>Toplam Üretim Günü:</th>
+                                <td>{{ plan.total_days }} gün</td>
+                            </tr>
+                            <tr>
+                                <th>Vardiya Süresi:</th>
+                                <td>{{ plan.shift_schedule.start_time }} - {{ plan.shift_schedule.end_time }} ({{ plan.shift_schedule.effective_work_time }} dk. efektif)</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5>Proses Dağılımı</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="processChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Ürün Detayları</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Ürün</th>
+                                        <th>Adet</th>
+                                        <th>Toplam Süre (dk)</th>
+                                        <th>Proses Detayları</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product_time in plan.product_times %}
+                                    <tr>
+                                        <td>{{ product_time.product }}</td>
+                                        <td>{{ quantities[loop.index0] }}</td>
+                                        <td>{{ product_time.minutes|round|int }}</td>
+                                        <td>
+                                            <table class="table table-sm mb-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Proses</th>
+                                                        <th>Süre (dk)</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for process, minutes in product_time.processes.items() %}
+                                                    <tr>
+                                                        <td>{{ process }}</td>
+                                                        <td>{{ minutes|round|int }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Proses Bazlı Detaylar</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Proses</th>
+                                        <th>Toplam Süre (dk)</th>
+                                        <th>Personel Sayısı</th>
+                                        <th>Personel-Saat</th>
+                                        <th>Yüzde</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for process, minutes in plan.process_details.items() %}
+                                    <tr>
+                                        <td>{{ process }}</td>
+                                        <td>{{ minutes|round|int }}</td>
+                                        <td>{{ plan.process_personnel[process] }}</td>
+                                        <td>{{ ((minutes * plan.process_personnel[process])/60)|round(1) }}</td>
+                                        <td>{{ ((minutes / plan.total_minutes) * 100)|round(1) }}%</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Günlük Üretim Planı</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="accordion" id="dailyPlanAccordion">
+                            {% for day_plan in plan.daily_process_plan %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                    <button class="accordion-button {{ 'collapsed' if loop.index > 1 else '' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}" aria-expanded="{{ 'true' if loop.index == 1 else 'false' }}" aria-controls="collapse{{ loop.index }}">
+                                        {{ day_plan.date }} - Gün {{ loop.index }}
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {{ 'show' if loop.index == 1 else '' }}" aria-labelledby="heading{{ loop.index }}" data-bs-parent="#dailyPlanAccordion">
+                                    <div class="accordion-body">
+                                        <div class="timeline-container">
+                                            <div class="timeline">
+                                                <!-- Vardiya başlangıç ve bitiş işaretleri -->
+                                                <div class="timeline-marker" style="left: 0%;">
+                                                    <div class="timeline-marker-label">{{ plan.shift_schedule.start_time }}</div>
+                                                </div>
+                                                <div class="timeline-marker" style="left: 100%;">
+                                                    <div class="timeline-marker-label">{{ plan.shift_schedule.end_time }}</div>
+                                                </div>
+                                                
+                                                <!-- Molalar -->
+                                                {% for break_info in plan.shift_schedule.breaks %}
+                                                {% set break_start_minutes = break_info.start.split(':')[0]|int * 60 + break_info.start.split(':')[1]|int %}
+                                                {% set shift_start_minutes = plan.shift_schedule.start_time.split(':')[0]|int * 60 + plan.shift_schedule.start_time.split(':')[1]|int %}
+                                                {% set shift_end_minutes = plan.shift_schedule.end_time.split(':')[0]|int * 60 + plan.shift_schedule.end_time.split(':')[1]|int %}
+                                                {% set shift_duration = shift_end_minutes - shift_start_minutes %}
+                                                {% set break_position = ((break_start_minutes - shift_start_minutes) / shift_duration) * 100 %}
+                                                {% set break_width = (break_info.duration / shift_duration) * 100 %}
+                                                
+                                                <div class="timeline-break" style="left: {{ break_position }}%; width: {{ break_width }}%;">
+                                                    <div class="timeline-break-label">{{ break_info.start }}-{{ break_info.end }}</div>
+                                                </div>
+                                                {% endfor %}
+                                                
+                                                <!-- Prosesler -->
+                                                {% for process, details in day_plan.processes.items() %}
+                                                {% set process_start_minutes = details.start_time.split(':')[0]|int * 60 + details.start_time.split(':')[1]|int %}
+                                                {% set shift_start_minutes = plan.shift_schedule.start_time.split(':')[0]|int * 60 + plan.shift_schedule.start_time.split(':')[1]|int %}
+                                                {% set shift_end_minutes = plan.shift_schedule.end_time.split(':')[0]|int * 60 + plan.shift_schedule.end_time.split(':')[1]|int %}
+                                                {% set shift_duration = shift_end_minutes - shift_start_minutes %}
+                                                {% set process_position = ((process_start_minutes - shift_start_minutes) / shift_duration) * 100 %}
+                                                {% set process_width = (details.minutes / shift_duration) * 100 %}
+                                                
+                                                <div class="timeline-process" style="left: {{ process_position }}%; width: {{ process_width }}%;">
+                                                    <div class="timeline-process-label">{{ process }}</div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="table-responsive mt-3">
+                                            <table class="table table-bordered table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Proses</th>
+                                                        <th>Başlangıç</th>
+                                                        <th>Bitiş</th>
+                                                        <th>Süre (dk)</th>
+                                                        <th>Personel</th>
+                                                        <th>Personel-Saat</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for process, details in day_plan.processes.items() %}
+                                                    <tr>
+                                                        <td>{{ process }}</td>
+                                                        <td>{{ details.start_time }}</td>
+                                                        <td>{{ details.end_time }}</td>
+                                                        <td>{{ details.minutes|round|int }}</td>
+                                                        <td>{{ details.personnel }}</td>
+                                                        <td>{{ ((details.personnel_minutes)/60)|round(1) }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Haftalık Plan</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="weeklyChart"></canvas>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Hafta</th>
+                                        <th>Süre (dk)</th>
+                                        <th>Süre (saat)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for week, minutes in plan.weekly_plan.items() %}
+                                    <tr>
+                                        <td>{{ week }}. Hafta</td>
+                                        <td>{{ minutes|round|int }}</td>
+                                        <td>{{ (minutes/60)|round(1) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Aylık Plan</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="monthlyChart"></canvas>
+                        <div class="table-responsive mt-3">
+                            <table class="table table-bordered table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Ay</th>
+                                        <th>Süre (dk)</th>
+                                        <th>Süre (saat)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for month, minutes in plan.monthly_plan.items() %}
+                                    <tr>
+                                        <td>{{ month }}</td>
+                                        <td>{{ minutes|round|int }}</td>
+                                        <td>{{ (minutes/60)|round(1) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>DeepSeek AI ile Planlama Asistanı</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="deepseekQuestion" class="form-label">Üretim planlaması hakkında bir soru sorun:</label>
+                            <textarea id="deepseekQuestion" class="form-control" rows="2" placeholder="Örnek: Bu üretim planını nasıl optimize edebilirim?"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <button id="askDeepseek" class="btn btn-primary">Sor</button>
+                        </div>
+                        <div class="mt-3">
+                            <div class="card">
+                                <div class="card-header bg-light">Yanıt</div>
+                                <div class="card-body">
+                                    <div id="deepseekResponse" class="p-2">
+                                        Üretim planlaması hakkında sorularınızı buradan sorabilirsiniz.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-primary">Ana Sayfaya Dön</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    
+    <script>
+        // Proses dağılımı grafiği
+        const processCtx = document.getElementById('processChart').getContext('2d');
+        const processChart = new Chart(processCtx, {
+            type: 'pie',
+            data: {
+                labels: [{% for process, minutes in plan.process_details.items() %}'{{ process }}',{% endfor %}],
+                datasets: [{
+                    data: [{% for process, minutes in plan.process_details.items() %}{{ minutes }},{% endfor %}],
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
+                        '#6f42c1', '#fd7e14', '#20c9a6', '#5a5c69', '#858796'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${Math.round(value)} dk (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Haftalık plan grafiği
+        const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+        const weeklyChart = new Chart(weeklyCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for week, minutes in plan.weekly_plan.items() %}'{{ week }}. Hafta',{% endfor %}],
+                datasets: [{
+                    label: 'Süre (saat)',
+                    data: [{% for week, minutes in plan.weekly_plan.items() %}{{ minutes/60 }},{% endfor %}],
+                    backgroundColor: '#4e73df'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Süre (saat)'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Aylık plan grafiği
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        const monthlyChart = new Chart(monthlyCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for month, minutes in plan.monthly_plan.items() %}'{{ month }}',{% endfor %}],
+                datasets: [{
+                    label: 'Süre (saat)',
+                    data: [{% for month, minutes in plan.monthly_plan.items() %}{{ minutes/60 }},{% endfor %}],
+                    backgroundColor: '#1cc88a'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Süre (saat)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

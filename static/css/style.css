@@ -1,0 +1,150 @@
+/* Main Styles */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #343a40;
+    font-weight: 600;
+}
+
+/* Card Styles */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #f1f8ff;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Button Styles */
+.btn {
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+}
+
+/* Table Styles */
+.table th {
+    background-color: #f8f9fa;
+}
+
+.table-sm td, .table-sm th {
+    padding: 0.3rem 0.5rem;
+}
+
+/* Timeline Styles */
+.timeline-container {
+    margin-top: 20px;
+    padding: 10px 0;
+}
+
+.timeline {
+    position: relative;
+    height: 60px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin: 20px 0;
+    border: 1px solid #dee2e6;
+}
+
+.timeline-marker {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: #000;
+}
+
+.timeline-marker-label {
+    position: absolute;
+    bottom: -20px;
+    left: -15px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.timeline-break {
+    position: absolute;
+    top: 10px;
+    height: 40px;
+    background-color: #ffc107;
+    border-radius: 3px;
+    text-align: center;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    border: 1px solid #e0a800;
+}
+
+.timeline-process {
+    position: absolute;
+    top: 10px;
+    height: 40px;
+    background-color: #0d6efd;
+    color: white;
+    border-radius: 3px;
+    text-align: center;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 5;
+    border: 1px solid #0a58ca;
+}
+
+.timeline-break-label, .timeline-process-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 5px;
+}
+
+/* Accordion Styles */
+.accordion-button:not(.collapsed) {
+    background-color: #e7f1ff;
+    color: #0c63e4;
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Progress Bar Styles */
+.progress {
+    height: 20px;
+    border-radius: 5px;
+}
+
+.progress-bar {
+    background-color: #0d6efd;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .timeline {
+        height: 80px;
+    }
+    
+    .timeline-process, .timeline-break {
+        top: 20px;
+    }
+}

@@ -1,0 +1,51 @@
+{
+    "products": [],
+    "processes": [
+        "TEST",
+        "GÖRSEL KONTROL",
+        "LEHİM KONTROL",
+        "THT",
+        "SMTD1",
+        "SMTD2",
+        "SOĞUTUCU_ETİKET",
+        "MANUEL LEHİM",
+        "MONTAJ VE DİĞER İŞLER",
+        "PAKETLEME"
+    ],
+    "product_processes": {},
+    "process_personnel": {
+        "TEST": 1,
+        "SMTD1": 2,
+        "SMTD2": 2,
+        "SOĞUTUCU_ETİKET": 1,
+        "LEHİM KONTROL": 1,
+        "GÖRSEL KONTROL": 1,
+        "MANUEL LEHİM": 2,
+        "MONTAJ VE DİĞER İŞLER": 2,
+        "PAKETLEME": 1,
+        "THT": 2
+    },
+    "shift_schedule": {
+        "start_time": "07:00",
+        "end_time": "17:00",
+        "breaks": [
+            {
+                "start": "09:00",
+                "end": "09:15",
+                "duration": 15
+            },
+            {
+                "start": "12:00",
+                "end": "12:30",
+                "duration": 30
+            },
+            {
+                "start": "15:00",
+                "end": "15:15",
+                "duration": 15
+            }
+        ],
+        "total_break_time": 60,
+        "effective_work_time": 540
+    }
+}

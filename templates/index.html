@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Üretim Planlama Uygulaması</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Üretim Planlama Uygulaması</h1>
+        
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Ürün Seçimi ve Adet Girişi</h5>
+                <div>
+                    <a href="/products" class="btn btn-sm btn-info me-2">Ürün Yönetimi</a>
+                    <a href="/add_product" class="btn btn-sm btn-success">+ Yeni Ürün Ekle</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <form id="productForm" action="/calculate" method="post">
+                    <div id="productSelections">
+                        <div class="product-row mb-3 row">
+                            <div class="col-md-6">
+                                <select name="products[]" class="form-select product-select" required>
+                                    <option value="">Ürün Seçiniz</option>
+                                    {% for product in products %}
+                                    <option value="{{ product }}">{{ product }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="number" name="quantities[]" class="form-control" placeholder="Adet" min="1" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-danger remove-product">Sil</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button type="button" id="addProduct" class="btn btn-secondary">+ Ürün Ekle</button>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Vardiya Bilgileri:</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">Başlangıç</span>
+                                <input type="time" id="shiftStart" name="shiftStart" class="form-control" value="07:00" required>
+                            </div>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text">Bitiş</span>
+                                <input type="time" id="shiftEnd" name="shiftEnd" class="form-control" value="17:00" required>
+                            </div>
+                            <div class="card mb-2">
+                                <div class="card-header py-1">Molalar</div>
+                                <div class="card-body py-2">
+                                    <div class="row mb-1">
+                                        <div class="col-5"><input type="time" name="breakStart[]" class="form-control form-control-sm" value="09:00"></div>
+                                        <div class="col-5"><input type="time" name="breakEnd[]" class="form-control form-control-sm" value="09:15"></div>
+                                        <div class="col-2"><span class="badge bg-secondary">15 dk</span></div>
+                                    </div>
+                                    <div class="row mb-1">
+                                        <div class="col-5"><input type="time" name="breakStart[]" class="form-control form-control-sm" value="12:00"></div>
+                                        <div class="col-5"><input type="time" name="breakEnd[]" class="form-control form-control-sm" value="12:30"></div>
+                                        <div class="col-2"><span class="badge bg-secondary">30 dk</span></div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-5"><input type="time" name="breakStart[]" class="form-control form-control-sm" value="15:00"></div>
+                                        <div class="col-5"><input type="time" name="breakEnd[]" class="form-control form-control-sm" value="15:15"></div>
+                                        <div class="col-2"><span class="badge bg-secondary">15 dk</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Çalışma Günleri:</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workDays[]" value="0" id="monday" checked>
+                                <label class="form-check-label" for="monday">Pazartesi</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workDays[]" value="1" id="tuesday" checked>
+                                <label class="form-check-label" for="tuesday">Salı</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workDays[]" value="2" id="wednesday" checked>
+                                <label class="form-check-label" for="wednesday">Çarşamba</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workDays[]" value="3" id="thursday" checked>
+                                <label class="form-check-label" for="thursday">Perşembe</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workDays[]" value="4" id="friday" checked>
+                                <label class="form-check-label" for="friday">Cuma</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workDays[]" value="5" id="saturday">
+                                <label class="form-check-label" for="saturday">Cumartesi</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="workDays[]" value="6" id="sunday">
+                                <label class="form-check-label" for="sunday">Pazar</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label">Planlama Yapılacak Prosesler:</label>
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% for process in processes %}
+                                        <div class="col-md-4 col-sm-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="processes[]" value="{{ process }}" id="process_{{ process }}" checked>
+                                                <label class="form-check-label" for="process_{{ process }}">{{ process }}</label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label">Proses Bazlı Personel Gereksinimleri:</label>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Proses</th>
+                                            <th>Personel Sayısı</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for process in processes %}
+                                        <tr>
+                                            <td>{{ process }}</td>
+                                            <td>
+                                                <input type="number" name="personnel[{{ process }}]" class="form-control form-control-sm" 
+                                                       value="{{ process_personnel.get(process, 1) }}" min="1" max="10">
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                <p class="text-muted small">Not: Personel sayısı arttıkça, proses süresi kişi sayısına göre otomatik olarak azalacaktır.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Üretim Planı Oluştur</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
